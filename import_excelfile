@@ -1,0 +1,17 @@
+%macro proc_import(filename=, dbms=, dsout=, sheetname=);
+	%let n_sheets = %sysfunc(countw(&sheetname., %str('|')));
+	%let n_dsout = %sysfunc(countw(&dsout., %str('|')));
+	if &n_sheets. = &n_dsout. %then %do;
+
+	%do i=1 %to &n_sheets.;
+		%let sheet_name = %scan(&sheetname., &i, %str('|'));
+		%let ds_out = %scan(&dsout., &i, %str('|'));
+
+		proc import datafile="&filename." out=&ds_out.  dbms=&dbms.  replace;
+			sheet=&sheet_name.;
+		run;
+
+	%end;
+%end;
+%exit;
+%mend;
