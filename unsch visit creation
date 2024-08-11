@@ -1,0 +1,87 @@
+data sv0;
+input usubjid $ 3. visit $ 9. date $ 3. ;
+cards;
+101 visit1   1
+101 visit2   2 
+101 visit3   3
+101 unvisit  4
+101 unvisit  5
+102 visit1   6
+102 visit2   7
+102 visit3   8
+102 visit4   9
+102 unvisit  10
+102 visit5   11
+102 unvisit  12
+;
+run; 
+
+data sv1;
+set sv0;
+svsdtc=input(date,best.);
+format svsdtc date9.;
+run;
+
+data tv;
+input visit $6. visitnum;
+cards;
+visit1 1
+visit2 2
+visit3 3
+visit4 4
+visit5 5
+visit6 6
+;
+run;
+
+proc sort data=sv1;
+by visit;
+run;
+
+proc sort data=tv;
+by visit;
+run;
+
+data sv2;
+merge sv1(in=a) tv;
+by visit;
+if a;
+run;
+
+proc sort data=sv2;
+by usubjid svsdtc;
+run;
+
+data sv3;
+retain visitnumber;
+set sv2;
+by usubjid;
+
+if visitnum=. then visitnum=visitnumber; 
+else visitnumber=visitnum;
+run;
+
+data  unsch sch;
+set sv3;
+if visit='unvisit' then output unsch;
+else output sch;
+run;
+
+data unsch1;
+set unsch;
+by usubjid visitnumber;
+if first.visitnumber then v_num=0.1;
+else v_num+0.1;
+visitnumber=visitnumber+v_num;
+run;
+
+data sv4;
+set unsch1 (drop=v_num) sch;
+run;
+
+proc sql;
+create table svv as
+select *
+from sv4
+order by  usubjid, visitnumber;
+quit;
